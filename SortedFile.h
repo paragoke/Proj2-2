@@ -13,6 +13,7 @@ struct SortInfo {
 	int runLength; 
 }; 
 
+enum Mode {R, W};
 
 class SortedFile: public GenericDBFile{
 
@@ -23,7 +24,12 @@ private:
 	Page *readPageBuffer;
 	Page *pageToBeMerged;
 	File* file;
-	
+	Mode m;
+	SortInfo *si;
+	File* file;
+	Record* current;
+	off_t pageIndex;
+	off_t writeIndex;
 
 public:
 	SortedFile (); 
@@ -38,4 +44,7 @@ public:
 	void Add (Record &addme);
 	int GetNext (Record &fetchme);
 	int GetNext (Record &fetchme, CNF &cnf, Record &literal);
+
+	void SortedFile:: MergeFromOutpipe();
+	
 }
