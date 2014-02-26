@@ -30,6 +30,7 @@ private:
 	Record* current;
 	off_t pageIndex;
 	off_t writeIndex;
+	int endOfFile = 0;
 
 public:
 	SortedFile (); 
