@@ -8,11 +8,13 @@
 #include "Comparison.h"
 #include "ComparisonEngine.h"
 
-typedef enum {heap, sorted, tree} fType;
+typedef enum {heap, sorted} fType;
 
-// stub DBFile header..replace it with your own DBFile.h 
 
 class DBFile {
+
+private:
+	GenericDBFile *gdbf;
 
 public:
 	DBFile (); 
@@ -35,6 +37,11 @@ public:
 
 class GenericDBFile{
 
+protected:
+	
+	File *myFile;
+	char *fileName;
+	
 public:
 	
 	GenericDBFile();

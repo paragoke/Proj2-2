@@ -12,7 +12,7 @@ SortedFile::SortedFile () {
 	outPipe = null;
 	bq = null;
 	readPageBuffer = new Page();
-	//pageToBeMerged = new Page(); can be delayed ?
+	tobeMerged = new Page();
 	m = R;
 }
 
@@ -140,26 +140,28 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 	// get sorted records from output pipe
 	CompareEngine *ce;
 	
-	MoveFirst();						// following four lines get the first record from those already present (not done)
-	*pageToBeMerged = new Page();
+	// following four lines get the first record from those already present (not done)
+	if(!tobeMerged){ tobeMerged = new Page(); }
+	pagePtrForMerge = 0; 
 	Record *rFromFile = new Record();
-	rFromFile
+	GetNew(rFromFile);						// loads the first record from existing records
 	
-	Record *rtemp = new Record();
-	Page *ptowrite = new Page();
-	File *newfile = new File();
-	newFile->Open(0,"newFile");
+	Record *rtemp = new Record();		
+	Page *ptowrite = new Page();			// new page that would be added
+	File *newfile = new File();				// new file after merging
+	newfile->Open(0,"mergedFile");				
 	
 	boolean nomore = false;
-	
+
 	while(true){
 		
-		if(outPipe.Remove(rtemp)==1){		// got the record from outpipe
+		if(outPipe.Remove(rtemp)==1){		// got the record from out pipe
 			
 			while(ce->Compare(rFromFile,rtemp,si->myOrder)<=0){ 		// merging this record with others
-				if(ptowrite->Append(rFromFile)!=1){		// copy already existing record
+				
+				if(ptowrite->Append(rFromFile)!=1){		// merge already existing record
 						// page full
-						int pageIndex = newFile->GetLength();
+						int pageIndex = newFile->GetLength()==0? 0:newFile->GetLength()-1;
 						//*
 						// write this page to file
 						newFile->Add(ptowrite,pageIndex);
@@ -169,13 +171,12 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 						ptowrite->Append(rtemp);		// does this consume the record ?
 				}
 				
-				// bring next rFromFile record ?
-				// check if records already present are exhausted
-				// set nomore = true; and break;
+				if(!GetNew(rFromFile)){ nomore = true; break; }	// bring next rFromFile record ?// check if records already present are exhausted
+
 			}
 			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
 						// page full
-						int pageIndex = newFile->GetLength();
+						int pageIndex = newFile->GetLength()==0? 0:newFile->GetLength()-1;
 						//*
 						// write this page to file
 						newFile->Add(ptowrite,pageIndex);
@@ -186,16 +187,28 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 			}
 		
 		}
-		else{		// pipe is empty now, done
+		else{
+			// pipe is empty now, copy rest of records to new file
+			do{
+				if(ptowrite->Append(rFromFile)!=1){			
+					
+					int pageIndex = newFile->GetLength()==0? 0:newFile->GetLength()-1;	// page full
+					//*
+					// write this page to file
+					newFile->Add(ptowrite,pageIndex);
+					// empty this out
+					ptowrite->EmptyItOut();
+					// append the current record ?
+					ptowrite->Append(rFromFile);		// does this consume the record ?
+				}
+			}while(GetNew(rFromFile)!=0);
 			break;
 		}
 	}
-	if(nomore==true){
+	if(nomore==true){									// file is empty
 		do{
 			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
-						// page full
-						int pageIndex = newFile->GetLength();
-						//*
+						int pageIndex = newFile->GetLength()==0? 0:newFile->GetLength()-1;		// page full
 						// write this page to file
 						newFile->Add(ptowrite,pageIndex);
 						// empty this out
@@ -206,11 +219,39 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 		}while(outPipe.remove(rtemp)!=0);
 	}
 	
+	newfile->Add(ptowrite,newfile->GetLength()-1);
 
+	newfile->Close();
+	
+	myFile->Close();
+	// delete resources that are not required
+	
+	if(rename("mergefile.tmp", fileName)) {				// making merged file the new file
+		cerr <<"rename file error!"<<endl;
+		return;
+	}
+	readerPageBuffer->EmptyItOut();
+	
+	myFile->Open(1, this->fileName);
+	
 }
 
-Sorted::~Sorted() {
+SortedFile::~SortedFile() {
 	delete readerPageBuffer;
 	delete inPipe;
 	delete outPipe;
+}
+
+int SortedFile:: GetNew(Record *r1){
+
+	while(!this->tobeMerged->GetFirst(r1)) {
+		if(pagePtrForMerge >= file->GetLength()-1)
+			return 0;
+		else {
+			file->GetPage(tobeMerged, pagePtrForMerge);
+			pagePtrForMerge++;
+		}
+	}
+	
+	return 1;
 }

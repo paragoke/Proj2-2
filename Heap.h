@@ -24,8 +24,8 @@ class Heap : public GenericDBFile{
 	int endOfFile;
 
 public:
-	DBFile (); 
-	~DBFile();
+	Heap (); 
+	~Heap();
 
 	int Create (char *fpath, fType file_type, void *startup);
 	int Open (char *fpath);

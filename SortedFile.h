@@ -22,7 +22,8 @@ private:
 	Pipe *outPipe;
 	BigQ *bq;
 	Page *readPageBuffer;
-	Page *pageToBeMerged;
+	Page *tobeMerged;
+	int pagePtrForMerge;
 	File* file;
 	Mode m;
 	SortInfo *si;

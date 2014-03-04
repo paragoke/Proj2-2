@@ -1,3 +1,4 @@
+
 #include "TwoWayList.h"
 #include "Record.h"
 #include "Schema.h"
@@ -7,33 +8,71 @@
 #include "DBFile.h"
 #include "Defs.h"
 
-// stub file .. replace it with your own DBFile.cc
+
+// DBFILE
 
 DBFile::DBFile () {
-
+	gdbf = null;
 }
 
 int DBFile::Create (char *f_path, fType f_type, void *startup) {
-}
+	
+	if(f_type==heap){
+		gdbf = new Heap();
+	}
+	else{
+		gdbf = new SortedFile();
+	}
 
-void DBFile::Load (Schema &f_schema, char *loadpath) {
-}
-
-int DBFile::Open (char *f_path) {
-}
-
-void DBFile::MoveFirst () {
-}
-
-int DBFile::Close () {
-}
-
-void DBFile::Add (Record &rec) {
-}
-
-int DBFile::GetNext (Record &fetchme) {
+	if(gdbf->Create(fpath, fType, void *startup)){
+		
+		return 1;
+	}
 	return 0;
 }
 
-int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
+void DBFile::Load (Schema &f_schema, char *loadpath) {
+	gdbf->Load(f_schema, loadpath);
 }
+
+int DBFile::Open (char *f_path) {
+	char *metaFile = new char[20];
+	sprintf(metaFile, "%s.meta", f_path);
+	File *f = fopen(metaFile, "r");
+	
+	fType f;
+	fscanf();	// read the file type
+	
+	if(f==heap) gdbf =  new Heap();
+	else gdbf = new SortedFile();
+	
+	fclose(f);
+	
+	return gdbf->Open(f_path);
+}
+
+void DBFile::MoveFirst () {
+	gdbf->MoveFirst();
+}
+
+int DBFile::Close () {
+	return gdbf->Close();
+}
+
+void DBFile::Add (Record &rec) {
+	gdbf->Add(rec);
+}
+
+int DBFile::GetNext (Record &fetchme) {
+	return gdbf->GetNext(fetchme);
+}
+
+int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
+	return gdbf->GetNext(fetchme, cnf, literal);
+}
+
+DBFile::~DBFile(){
+	delete gdbf;
+}
+
+

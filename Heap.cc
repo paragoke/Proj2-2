@@ -7,10 +7,6 @@
 #include "Heap.h"
 #include "Defs.h"
 
-// stub file .. replace it with your own Heap.cc
-
-//TODO:optimise for branch misses
-
 Heap::Heap () {
 
 	this->file = new File();
