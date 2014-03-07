@@ -5,7 +5,6 @@
 #include "Pipe.h"
 #include "File.h"
 #include "Record.h"
-#include "DBFile.h"
 #include "ComparisonEngine.h"
 #include <vector>
 #include <queue>
@@ -18,7 +17,6 @@ class BigQ {
 	//Record temp to read in records from pipes
 	
 	//Record temp;
-	vector<DBFile*> *runs;
 	int no_runs;
 	pthread_t worker;
 	int page_Index;
@@ -42,7 +40,7 @@ class BigQ {
 //	static bool sort_func(Record &,Record &,OrderMaker &sortorder);	
 	/*Deprecated: Replaced by DBFile , no need for indexing
 	//Record *recordBuff;
-	//int pageLength = 0;//no of records per page
+	//int pageLength = 0;//no of recrods per page
 	//Page *buffer;*/
 	
 
@@ -76,6 +74,30 @@ public:
 
 	bool operator()(Record *one,Record *two) const{
 
+		/*Record *one = new Record();
+
+		Record *two = new Record();
+		one->Copy(const_cast<Record *>(&onei));		
+
+		
+
+
+		two->Copy(const_cast<Record *>(&twoi));		
+		*/	
+	//	Record *inp1 = const_cast<Record*>(one);	
+	//	Record *inp2 = const_cast<Record*>(two);	
+
+//		cout<<"Read at location"<<inp1;
+//		cout<<"Comparing "<<one<<" and "<<two<<"\n";
+
+
+
+ //                       Schema schema("catalog","lineitem");
+                        //cout<<"Count: "<<count<<""; 
+//                        one->Print(&schema);
+//			two->Print(&schema);
+
+
 
 		ComparisonEngine *compare;
 
@@ -107,5 +129,43 @@ public:
 	
 
 };
+
+
+/*class sort_func2{
+
+private:
+
+	OrderMaker *sort_order;
+
+public:
+
+	sort_func(OrderMaker *order){
+		this->sort_order = order;
+	}
+
+	sort_func(){};
+
+	bool operator()(rwrap *one,rwrap *two) const{
+
+		ComparisonEngine *compare;
+
+		if(compare->Compare(&(one->rec),&(two->rec),this->sort_order)<0){
+			return true;
+		}
+
+		else{
+			return false;
+		}
+	}
+
+	
+
+};*/
+
+
+
+
+
+
 
 #endif

@@ -1,3 +1,4 @@
+
 #include "TwoWayList.h"
 #include "Record.h"
 #include "Schema.h"
@@ -7,32 +8,23 @@
 //#include "DBFile.h"
 
 
-struct SortInfo { 
-	OrderMaker *myOrder; 
-	int runLength; 
-}; 
 
-enum Mode {R, W};
+class HeapFile : public GenericDBFile{
 
-class SortedFile: public GenericDBFile{
-
-private:
-	Pipe *inPipe;
-	Pipe *outPipe;
-	BigQ *bq;
-	Page *readPageBuffer;
-	Page *tobeMerged;
-	int pagePtrForMerge;
-	File* file;
-	Mode m;
-	SortInfo *si;
+	char *file_path;
 	Record* current;
+	Page* readPage;
+	Page* writePage;
+	File* file;
 	off_t pageIndex;
 	off_t writeIndex;
+	char* name;
+	int writeIsDirty;
 	int endOfFile;
 
 public:
-	SortedFile (); 
+	HeapFile (); 
+	~HeapFile();
 
 	int Create (char *fpath, fType file_type, void *startup);
 	int Open (char *fpath);
@@ -45,8 +37,5 @@ public:
 	int GetNext (Record &fetchme);
 	int GetNext (Record &fetchme, CNF &cnf, Record &literal);
 
-	void MergeFromOutpipe();
-	int GetNew(Record *r1);	
 
-	~SortedFile();
 };
