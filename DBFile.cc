@@ -36,12 +36,16 @@ void DBFile::Load (Schema &f_schema, char *loadpath) {
 }
 
 int DBFile::Open (char *f_path) {
+	
 	char *metaFile = new char[20];
 	sprintf(metaFile, "%s.meta", f_path);
 	File *f = fopen(metaFile, "r");
 	
 	fType f;
-	fscanf();	// read the file type
+	char *s1 = new char[30];
+	fscanf(f,"%s\n",s1);	// read the file type
+	
+	f = (fType) s1;
 	
 	if(f==heap) gdbf =  new Heap();
 	else gdbf = new SortedFile();

@@ -1,3 +1,4 @@
+#include <fstream>
 #include "TwoWayList.h"
 #include "Record.h"
 #include "Schema.h"
@@ -30,8 +31,8 @@ void SortedFile::Load (Schema &f_schema, char *loadpath) {		// requires BigQ ins
 	if(m!=Mode.W){
 		m = Mode.W;
 		// create input, output pipe and BigQ instance
-		if(inPipe!=null)inPipe = new Pipe();	// requires size ?
-		if(outPipe!=null)outPipe = new Pipe();
+		if(inPipe!=null)inPipe = new Pipe(100);	// requires size ?
+		if(outPipe!=null)outPipe = new Pipe(100);
 		if(bq!=null)bq = new BigQ(inPipe,outPipe,si->myOrder,si->runlength);
 	}
 	
@@ -54,7 +55,13 @@ int SortedFile::Open (char *f_path) {
 	// requires some kind of de serialization
 	// initialize it
 	
+	ifstream ifs(filename.meta,ios::binary);
 	
+	ifs.read((char*)&si, sizeof(si)); 
+	
+	m = Mode.R;
+	
+	MoveFirst();
 	// set to read mode
 	// bring first page into read buffer and initialize first record
 	
@@ -74,12 +81,14 @@ void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 	}
 	else{
 		// change mode to read
-		
+		m = Mode.R;
 		// Merge contents if any from BigQ
-		
+		MergeFromOutpipe();
+		file->GetPage(readPageBuffer,1); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
+		readPage->GetFirst(current);
 		// bring the first page into readPageBuffer
 		// Set curr Record to first record
-		// 
+		
 	}
 	
 }
@@ -88,6 +97,10 @@ int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 	file->Close();
 	endOfFile = 1;
 	// write updated state to meta file
+	ofstream ofs(fileName.meta,ios::binary);
+	
+	ofs.write((char*) &si,sizeof(si));	
+	
 }
 
 void SortedFile::Add (Record &rec) {	// requires BigQ instance		done
@@ -95,8 +108,8 @@ void SortedFile::Add (Record &rec) {	// requires BigQ instance		done
 	if(m!=Mode.W){
 		m = Mode.W;
 		// create input, output pipe and BigQ instance
-		if(inPipe!=null)inPipe = new Pipe();	// requires size ?
-		if(outPipe!=null)outPipe = new Pipe();
+		if(inPipe!=null)inPipe = new Pipe(100);	// requires size ?
+		if(outPipe!=null)outPipe = new Pipe(100);
 		if(bq!=null)bq = new BigQ(inPipe,outPipe,si->myOrder,si->runlength);
 	}
 	inPipe->Insert(&rec);	// pipe blocks and record is consumed or is buffering required ?
@@ -131,6 +144,11 @@ int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		d
 }
 
 int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requires binary search // requires MergeFromOuputPipe()
+	MoveFirst();
+	
+	// sort order matches cnf
+	// binary search
+
 }
 
 void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
